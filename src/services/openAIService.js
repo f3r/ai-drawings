@@ -1,4 +1,6 @@
-import app from "./config";
+import axios from 'axios'
+
+const app = axios.create({ baseURL: "http://localhost:3000/api" })
 
 export const getStory = async (idea) => {
   try {
@@ -7,7 +9,7 @@ export const getStory = async (idea) => {
   } catch (error) {
     console.error(error);
   }
-};
+}
 
 export const getDrawings = async (arr) => {
   try {
@@ -16,6 +18,6 @@ export const getDrawings = async (arr) => {
     });
     return data
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
-};
+}
