@@ -1,28 +1,37 @@
-import { useState, Component } from 'react'
-import ReactDOM from "react-dom";
-import { Carousel } from "react-responsive-carousel";
-import "react-responsive-carousel/lib/styles/carousel.min.css"
+import { useState } from 'react'
+import Carousel from "react-multi-carousel";
+import "react-multi-carousel/lib/styles.css";
 
-
-import { getDrawings } from './services/openAIService'
+import { getStory, getDrawings } from './services/openAIService'
 
 import './App.css'
 
 function App() {
-  const [ line1, setLine1 ] = useState('')
-  const [ line2, setLine2 ] = useState('')
-  const [ line3, setLine3 ] = useState('')
-  const [ drawings, setDrawings ] = useState([])
-  const [ loader, setLoader ] = useState(false)
-  const [ reset, setReset ] = useState(false)
+  const [ideaGenerated, setIdeaGenerated] = useState(false)
+  const [idea, setIdea] = useState('')
 
-  const payload = [ line1, line2, line3 ]
+  const [line1, setLine1] = useState('')
+  const [line2, setLine2] = useState('')
+  const [line3, setLine3] = useState('')
+  const [line4, setLine4] = useState('')
+  const [line5, setLine5] = useState('')
 
-  const handleChange = (e, func) => {
-    func(e.target.value)
+  const [drawings, setDrawings] = useState([])
+  const [loader, setLoader] = useState(false)
+
+  const payload = [line1, line2, line3, line4, line5]
+
+  const handleGenerateStory = async () => {
+    setLoader(true)
+    const { story } = await getStory(idea);
+    console.log(story);
+    [setLine1, setLine2, setLine3, setLine4, setLine5].forEach((setLine, idx) => setLine(story[idx] || ''));
+
+    setLoader(false)
+    setIdeaGenerated(true)
   }
 
-  const handleClick = async() => {
+  const handleGenerateDrawings = async () => {
     setLoader(true)
     const result = await getDrawings(payload)
     const urls = result.map(item => item[0].url)
@@ -34,37 +43,76 @@ function App() {
     return drawings.map((drawing, idx) => {
       return (
         <div key={idx} className='drawing'>
-          <img src={ drawing } className='picture'/>
-          <p className="legend"> { payload[idx] } </p>
+          <p className="legend"> {payload[idx]} </p>
+          <img src={drawing} className='picture' />
         </div>
       );
     })
   }
 
-  const resetApp = () => {
-    setReset(!reset)
+  const responsive = {
+    superLargeDesktop: {
+      // the naming can be any, depends on you.
+      breakpoint: { max: 4000, min: 3000 },
+      items: 1
+    },
+    desktop: {
+      breakpoint: { max: 3000, min: 1024 },
+      items: 1
+    },
+    tablet: {
+      breakpoint: { max: 1024, min: 464 },
+      items: 1
+    },
+    mobile: {
+      breakpoint: { max: 464, min: 0 },
+      items: 1
+    }
   }
 
   return (
     <>
-      {drawings.length === 0 ? (
+
+      {!ideaGenerated && (
         <>
           <h1>Story Generator</h1>
-          <h2>Create your own story in 3 parts</h2>
-          <section className="line-1">
-            <h3>Line 1:</h3>
-            <input type="text" onChange={(e) => handleChange(e, setLine1)} />
+          <h2>Create your own kid story</h2>
+          <section className='section'>
+            <input type="text" onChange={(e) => setIdea(e.target.value)} />
           </section>
-          <section className="line-2">
-            <h3>Line 2:</h3>
-            <input type="text" onChange={(e) => handleChange(e, setLine2)} />
+          <button onClick={handleGenerateStory}>Generate Story</button>
+
+        </>
+      )}
+
+      {ideaGenerated && drawings.length === 0 ? (
+        <>
+          <h1>Story Generator</h1>
+          <h2>Edit the story</h2>
+
+          <section className='section'>
+            <input type="text" onChange={(e) => setLine1(e.target.value)} value={line1} />
           </section>
-          <section className="line-3">
-            <h3>Line 3:</h3>
-            <input type="text" onChange={(e) => handleChange(e, setLine3)} />
+
+          <section>
+            <input type="text" onChange={(e) => setLine2(e.target.value)} value={line2} />
           </section>
-          <button onClick={handleClick}>Submit</button>
-          {loader && 
+
+          <section >
+            <input type="text" onChange={(e) => setLine3(e.target.value)} value={line3} />
+          </section>
+
+          <section>
+            <input type="text" onChange={(e) => setLine4(e.target.value)} value={line4} />
+          </section>
+
+          <section >
+            <input type="text" onChange={(e) => setLine5(e.target.value)} value={line5} />
+          </section>
+
+          <button onClick={handleGenerateDrawings}>Create Drawings</button>
+
+          {loader &&
             <h1>
               Loading...
             </h1>
@@ -72,10 +120,10 @@ function App() {
         </>
       ) : (
         <>
-          <Carousel>
-            { displayImages() }
+          <p>Story Generator</p>
+          <Carousel responsive={responsive}>
+            {displayImages()}
           </Carousel>
-          <button onClick={resetApp}>Again</button>
         </>
       )}
     </>
